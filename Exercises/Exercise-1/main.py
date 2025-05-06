@@ -1,5 +1,7 @@
-import requests
 
+import os
+import requests
+import zipfile
 download_uris = [
     "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2018_Q4.zip",
     "https://divvy-tripdata.s3.amazonaws.com/Divvy_Trips_2019_Q1.zip",
@@ -12,8 +14,7 @@ download_uris = [
 
 
 def main():
-    # your code here
-    pass
+ 
 
 
 if __name__ == "__main__":
