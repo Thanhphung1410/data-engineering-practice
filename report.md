@@ -49,39 +49,39 @@ Sau khi docker build --tag=exercise6 ., thêm code  vào main.py và chạy dock
  
  ![image](https://github.com/user-attachments/assets/5a82018e-880b-4da2-9242-1ef7cc0e1d56) \
  
- File dữ liệu trong file report \
+ File dữ liệu trong file report 
  
  ![image](https://github.com/user-attachments/assets/b28faf48-f531-45b4-8c68-fe5ab454cba8) \
  
- File average_trip_duration_per_day: \
+ File average_trip_duration_per_day: 
  
 ![image](https://github.com/user-attachments/assets/f7db606e-9cf3-4e74-9cb0-3e76f9b24eeb) \
 
-File avg_trip_duration_by_gender \
+File avg_trip_duration_by_gender 
 
 ![image](https://github.com/user-attachments/assets/deb31830-f7c3-4147-8e19-a13529e1af42) \
 
-File most_popular_start_station_per_month \
+File most_popular_start_station_per_month 
 
 ![image](https://github.com/user-attachments/assets/9cfad453-7f5c-4738-bad7-9b684138500b) \
 
-FILE  top_3_popular_end_stations_last_14_days \
+FILE  top_3_popular_end_stations_last_14_days 
 
 ![image](https://github.com/user-attachments/assets/a4fb9367-0d2a-4718-9287-2776e8a394a1) \
 
-FILE top_10_ages_longest_trips  \
+FILE top_10_ages_longest_trips  
 
 ![image](https://github.com/user-attachments/assets/66246738-2cb2-4864-8ca8-6b91c59ee6d0) \
 
-File top_10_ages_shortest_trips \
+File top_10_ages_shortest_trips 
 
 ![image](https://github.com/user-attachments/assets/a2ff6b96-7711-4bc8-9c1c-95bf926a7bd5) \
 
-File trip_count_per_day \
+File trip_count_per_day 
 
 ![image](https://github.com/user-attachments/assets/e49e70a6-ffb9-435f-ad62-9ce5bfb5407d) \
 
-Exercise 7 \
+Exercise 7 
 
 Sau khi docker build --tag=exercise7 ., thêm code vào main.py và chạy docker-compose up.
 Sinh ra các file \
