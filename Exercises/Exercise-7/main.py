@@ -1,50 +1,57 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import (
-    input_file_name, regexp_extract, to_date, split, when, col,
-    dense_rank, sha2, concat_ws
-)
-from pyspark.sql.window import Window
+from pyspark.sql.functions import col, when, unix_timestamp
+import hashlib
 
-def process_data(spark, input_path):
-    # 1. Đọc file zip (CSV nén)
-    df = spark.read.option("header", "true").csv(f"zip://{input_path}")
+def get_spark_session():
+    """Khởi tạo SparkSession"""
+    return SparkSession.builder.appName("HardDriveFailures").getOrCreate()
 
-    # 2. Thêm cột source_file
-    df = df.withColumn("source_file", input_file_name())
+def add_source_file_column(df, source_file_name):
+    """Thêm cột source_file vào DataFrame"""
+    return df.withColumn("source_file", when(col("source_file").isNull(), source_file_name).otherwise(col("source_file")))
 
-    # 3. Trích xuất ngày từ tên file -> file_date
-    df = df.withColumn(
-        "file_date",
-        to_date(regexp_extract("source_file", r"(\d{4}-\d{2}-\d{2})", 1), "yyyy-MM-dd")
-    )
+def extract_file_date(df):
+    """Trích xuất date từ tên tệp và chuyển thành kiểu timestamp"""
+    return df.withColumn("file_date", unix_timestamp(col("source_file").substr(1, 10), "yyyy-MM-dd").cast("timestamp"))
 
-    # 4. Thêm cột brand từ model
-    df = df.withColumn(
-        "brand",
-        when(col("model").contains(" "), split(col("model"), " ")[0]).otherwise("unknown")
-    )
+def add_brand_column(df):
+    """Thêm cột brand từ model (tách tên thương hiệu từ model)"""
+    return df.withColumn("brand", when(col("model").contains(" "), col("model").substr(1, col("model").find(" ") - 1)).otherwise("unknown"))
 
-    # 5. Tính storage_ranking theo capacity_bytes
-    window_spec = Window.orderBy(col("capacity_bytes").cast("bigint").desc())
-    df = df.withColumn(
-        "storage_ranking",
-        dense_rank().over(window_spec)
-    )
+def add_storage_ranking(df):
+    """Tạo cột storage_ranking từ capacity_bytes"""
+    # Tạo DataFrame xếp hạng các model theo dung lượng capacity_bytes
+    storage_ranking_df = df.select("model", "capacity_bytes").distinct().orderBy(col("capacity_bytes"), ascending=False).withColumn("storage_ranking", (col("capacity_bytes").rank().over(Window.orderBy(col("capacity_bytes").desc()))))
+    return df.join(storage_ranking_df, on="model", how="left")
 
-    # 6. Tạo primary_key bằng sha2 (hash 256)
-    df = df.withColumn(
-        "primary_key",
-        sha2(concat_ws("||", *df.columns), 256)
-    )
+def add_primary_key(df):
+    """Tạo cột primary_key bằng cách hash giá trị của mỗi bản ghi"""
+    return df.withColumn("primary_key", hashlib.md5(col("serial_number").cast("string").encode("utf-8")).hexdigest())
 
-    return df
+def main():
+    # Khởi tạo SparkSession
+    spark = get_spark_session()
+    
+    # Đọc dữ liệu từ tệp CSV (ví dụ: hard-drive-2022-01-01-failures.csv)
+    df = spark.read.option("header", "true").csv("datatraining/hard-drive-2022-01-01-failures.csv.zip")
+    
+    # Thêm cột source_file
+    df = add_source_file_column(df, "hard-drive-2022-01-01-failures.csv.zip")
+    
+    # Trích xuất ngày từ tên tệp
+    df = extract_file_date(df)
+    
+    # Thêm cột brand
+    df = add_brand_column(df)
+    
+    # Xếp hạng dung lượng và thêm cột storage_ranking
+    df = add_storage_ranking(df)
+    
+    # Thêm cột primary_key
+    df = add_primary_key(df)
+    
+    # Hiển thị kết quả
+    df.show()
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.appName("Exercise-7").getOrCreate()
-
-    input_file = "data/hard-drive-2022-01-01-failures.csv.zip"
-    result_df = process_data(spark, input_file)
-
-    result_df.show(5, truncate=False)
-    spark.stop()
-
+    main()
