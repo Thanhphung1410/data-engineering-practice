@@ -1,57 +1,84 @@
+import os
+import zipfile
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, when, unix_timestamp
-import hashlib
+from pyspark.sql.functions import (
+    col, to_date, when, hash, split, monotonically_increasing_id
+)
+from pyspark.sql.window import Window
 
-def get_spark_session():
-    """Khởi tạo SparkSession"""
-    return SparkSession.builder.appName("HardDriveFailures").getOrCreate()
+def extract_zip_files(data_dir):
+    for filename in os.listdir(data_dir):
+        if filename.endswith(".zip"):
+            zip_path = os.path.join(data_dir, filename)
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(data_dir)
 
-def add_source_file_column(df, source_file_name):
-    """Thêm cột source_file vào DataFrame"""
-    return df.withColumn("source_file", when(col("source_file").isNull(), source_file_name).otherwise(col("source_file")))
 
-def extract_file_date(df):
-    """Trích xuất date từ tên tệp và chuyển thành kiểu timestamp"""
-    return df.withColumn("file_date", unix_timestamp(col("source_file").substr(1, 10), "yyyy-MM-dd").cast("timestamp"))
+def load_data(spark, data_path):
+    return spark.read.csv(data_path, header=True, inferSchema=True)
+
+
+def add_source_file_column(df, data_path):
+    # Thêm tên tệp vào cột source_file
+    source_file = os.path.basename(data_path)
+    return df.withColumn("source_file", when(col("source_file").isNull(), source_file).otherwise(col("source_file")))
+
+
+def extract_date_from_source_file(df):
+    # Tạo cột file_date từ chuỗi trong cột source_file
+    return df.withColumn("file_date", to_date(split(col("source_file"), "-")[0]))
+
 
 def add_brand_column(df):
-    """Thêm cột brand từ model (tách tên thương hiệu từ model)"""
-    return df.withColumn("brand", when(col("model").contains(" "), col("model").substr(1, col("model").find(" ") - 1)).otherwise("unknown"))
+    # Tạo cột brand từ cột model
+    return df.withColumn("brand", when(col("model").contains(" "), split(col("model"), " ")[0]).otherwise("unknown"))
+
 
 def add_storage_ranking(df):
-    """Tạo cột storage_ranking từ capacity_bytes"""
-    # Tạo DataFrame xếp hạng các model theo dung lượng capacity_bytes
-    storage_ranking_df = df.select("model", "capacity_bytes").distinct().orderBy(col("capacity_bytes"), ascending=False).withColumn("storage_ranking", (col("capacity_bytes").rank().over(Window.orderBy(col("capacity_bytes").desc()))))
-    return df.join(storage_ranking_df, on="model", how="left")
+    # Xếp hạng dung lượng của các model theo thứ tự từ lớn nhất đến nhỏ nhất
+    window_spec = Window.orderBy(col("capacity_bytes").desc())
+    return df.withColumn("storage_ranking", row_number().over(window_spec))
+
 
 def add_primary_key(df):
-    """Tạo cột primary_key bằng cách hash giá trị của mỗi bản ghi"""
-    return df.withColumn("primary_key", hashlib.md5(col("serial_number").cast("string").encode("utf-8")).hexdigest())
+    # Tạo primary_key từ hash của các cột
+    return df.withColumn("primary_key", hash(*df.columns))
+
+
+def save_to_csv(df, filename):
+    output_path = f"reports/{filename}"
+    df.coalesce(1).write.csv(output_path, header=True, mode="overwrite")
+
 
 def main():
-    # Khởi tạo SparkSession
-    spark = get_spark_session()
-    
-    # Đọc dữ liệu từ tệp CSV (ví dụ: hard-drive-2022-01-01-failures.csv)
-    df = spark.read.option("header", "true").csv("datatraining/hard-drive-2022-01-01-failures.csv.zip")
-    
+    spark = SparkSession.builder.appName("Exercise7").getOrCreate()
+
+    data_dir = "data"
+    extract_zip_files(data_dir)
+
+    # Load dữ liệu từ các tệp CSV đã giải nén
+    df = load_data(spark, os.path.join(data_dir, "*.csv"))
+
     # Thêm cột source_file
-    df = add_source_file_column(df, "hard-drive-2022-01-01-failures.csv.zip")
+    df = add_source_file_column(df, os.path.join(data_dir, "hard-drive-2022-01-01-failures.csv.zip"))
     
-    # Trích xuất ngày từ tên tệp
-    df = extract_file_date(df)
+    # Thêm cột file_date
+    df = extract_date_from_source_file(df)
     
     # Thêm cột brand
     df = add_brand_column(df)
     
-    # Xếp hạng dung lượng và thêm cột storage_ranking
+    # Thêm cột storage_ranking
     df = add_storage_ranking(df)
     
     # Thêm cột primary_key
     df = add_primary_key(df)
-    
-    # Hiển thị kết quả
-    df.show()
+
+    # Lưu các kết quả vào các tệp CSV
+    save_to_csv(df, "final_report_with_new_columns")
+
+    spark.stop()
+
 
 if __name__ == "__main__":
     main()
