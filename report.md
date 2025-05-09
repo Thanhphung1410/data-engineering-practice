@@ -92,8 +92,21 @@ Sinh ra các file
 
 ![image](https://github.com/user-attachments/assets/7c46f234-5002-421e-b63a-cc01d93fa0a6)
 
+ báo cáo Lab 8
+câu 2
+Sau khi thực hiện lệnh docker-compose build và docker-compose run currency_ml, pipeline đã chạy hoàn chỉnh :
+File dữ liệu đã được tạo: data/rates.csv và File mô hình đã được lưu: model/model.pkl
+Quá trình cào dữ liệu, tiền xử lý, huấn luyện mô hình và lưu kết quả đã hoàn tất thành công trong môi trường Docker, và mô hình tạo ra có độ chính xác rất cao (1.00).
+
+![image](https://github.com/user-attachments/assets/ece88165-8157-4f0e-88f0-095f2e32da8a)
+
+![image](https://github.com/user-attachments/assets/49052eb5-6dfb-4a2d-ae7c-9575c31d352a)
 
 
+![image](https://github.com/user-attachments/assets/25b1cd34-31d0-4161-be6b-2e1597aa97de)
+
+
+![image](https://github.com/user-attachments/assets/efc5b6af-1f40-48c8-8c18-09a59b2a40e3)
 
 
 
