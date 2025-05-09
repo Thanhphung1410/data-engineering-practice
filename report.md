@@ -13,7 +13,7 @@ Sau khi docker build --tag=exercise-2 ., thêm code vào main.py và chạy dock
 
 ![image](https://github.com/user-attachments/assets/f0c0b6bc-d25d-4e6c-9824-99b5f3fd891d) 
 
-![image](https://github.com/user-attachments/assets/7bd37867-9168-435f-8bcd-2402e6b4bae1) 
+![image](https://github.com/user-attachments/assets/7bd37867-9168-435f-8bcd-2402e6b4bae1)  
 
 Exercise 3 
 Sau khi chạy lệnh docker build --tag=exercise3 ., bạn thêm mã xử lý vào main.py để tải và giải nén dữ liệu từ Common Crawl. Khi thực thi docker-compose up trong thư mục EXERCISE-3, chương trình sẽ tự động tải file wet.paths.gz từ S3 và tạo ba thư mục: gzip_files (chứa file .gz tải về), path_files (chứa file .txt giải nén, liệt kê đường dẫn WET), và data_files (lưu nội dung .wet đã giải nén từ web).
