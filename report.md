@@ -1,5 +1,5 @@
 Báo cáo các bài tập 
-Pipeline chạy lần lượt các Exercise-1, Exercise-2, Exercise-3, Exercise-4, Exercise-5, Exercise-6, Exercise-7 
+Pipeline chạy lần lượt các Exercise-1, Exercise-2, Exercise-3, Exercise-4, Exercise-5, Exercise-6, Exercise-7  
 
 ![image](https://github.com/user-attachments/assets/de68dfb2-3816-4e10-a3ff-79937866a757)
 Exercise 1
